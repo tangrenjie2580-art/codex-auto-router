@@ -19,7 +19,7 @@ class RouteStoreTests(unittest.TestCase):
     def test_stores_only_hmac_not_raw_response_id(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             store = RouteStore(Path(temp_dir))
-            store.remember("resp_sensitive", "luna", "gpt-5.6-luna", "xhigh")
+            store.remember("resp_sensitive", "luna", "gpt-6-luna", "xhigh")
             raw = store.data_path.read_text(encoding="utf-8")
             self.assertNotIn("resp_sensitive", raw)
             self.assertEqual(store.lookup("resp_sensitive")["model"], "luna")
@@ -29,7 +29,7 @@ class RouteStoreTests(unittest.TestCase):
     def test_continuation_inherits_model_without_classifying_tool_output(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             store = RouteStore(Path(temp_dir))
-            store.remember("resp_previous", "luna", "gpt-5.6-luna", "xhigh")
+            store.remember("resp_previous", "luna", "gpt-6-luna", "xhigh")
             routed, record = route_payload(
                 {
                     "input": [{"type": "function_call_output", "output": "failed"}],
@@ -38,7 +38,7 @@ class RouteStoreTests(unittest.TestCase):
                 },
                 store,
             )
-            self.assertEqual(routed["model"], "gpt-5.6-luna")
+            self.assertEqual(routed["model"], "gpt-6-luna")
             self.assertEqual(routed["reasoning"]["effort"], "xhigh")
             self.assertEqual(record["source"], "response_chain")
 
@@ -57,7 +57,7 @@ class RouteStoreTests(unittest.TestCase):
     def test_new_user_execution_turn_reclassifies_instead_of_inheriting_sol(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             store = RouteStore(Path(temp_dir))
-            store.remember("resp_plan", "sol", "gpt-5.6-sol", "medium")
+            store.remember("resp_plan", "sol", "gpt-6-sol", "medium")
             routed, record = route_payload(
                 {
                     "input": [
@@ -67,11 +67,11 @@ class RouteStoreTests(unittest.TestCase):
                         }
                     ],
                     "previous_response_id": "resp_plan",
-                    "model": "gpt-5.6-sol",
+                    "model": "gpt-6-sol",
                 },
                 store,
             )
-            self.assertEqual(routed["model"], "gpt-5.6-luna")
+            self.assertEqual(routed["model"], "gpt-6-luna")
             self.assertEqual(routed["reasoning"]["effort"], "xhigh")
             self.assertEqual(record["source"], "rules")
             self.assertIn("approved_plan_execution", record["matched_rules"])

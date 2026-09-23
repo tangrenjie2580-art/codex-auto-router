@@ -39,7 +39,7 @@ class PayloadTests(unittest.TestCase):
 
     def test_rewrites_only_model_and_effort(self):
         payload = {
-            "model": "gpt-5.6-luna",
+            "model": "gpt-6-luna",
             "input": "分析网络异常根因",
             "instructions": "keep me",
             "previous_response_id": "resp_previous",
@@ -52,7 +52,7 @@ class PayloadTests(unittest.TestCase):
             "future_field": {"preserve": True},
         }
         routed, record = responses_router.route_payload(payload)
-        self.assertEqual(routed["model"], "gpt-5.6-sol")
+        self.assertEqual(routed["model"], "gpt-6-sol")
         self.assertEqual(routed["reasoning"], {"effort": "medium", "summary": "auto"})
         for key in (
             "instructions",
@@ -67,12 +67,12 @@ class PayloadTests(unittest.TestCase):
 
     def test_model_effort_matrix(self):
         cases = (
-            ("更新 TTD", "gpt-5.6-luna", "xhigh"),
-            ("分析网络异常根因", "gpt-5.6-sol", "medium"),
+            ("更新 TTD", "gpt-6-luna", "xhigh"),
+            ("分析网络异常根因", "gpt-6-sol", "medium"),
             (
                 "设计大型跨系统迁移架构，要求零停机、容灾和完整回滚",
-                "gpt-6-astra",
-                "low",
+                "gpt-6-sol",
+                "medium",
             ),
         )
         for task, model, effort in cases:
@@ -92,7 +92,7 @@ class PayloadTests(unittest.TestCase):
     def test_websocket_response_create_is_routed(self):
         original = {
             "type": "response.create",
-            "model": "gpt-5.6-luna",
+            "model": "gpt-6-luna",
             "input": [{"role": "user", "content": "分析网络异常根因"}],
             "tools": [{"type": "shell"}],
             "stream": True,
@@ -102,7 +102,7 @@ class PayloadTests(unittest.TestCase):
         )
         routed = json.loads(routed_text)
         self.assertEqual(routed["type"], "response.create")
-        self.assertEqual(routed["model"], "gpt-5.6-sol")
+        self.assertEqual(routed["model"], "gpt-6-sol")
         self.assertEqual(routed["reasoning"]["effort"], "medium")
         self.assertEqual(routed["tools"], original["tools"])
         self.assertEqual(record["model"], "sol")
@@ -157,7 +157,7 @@ class ProxyTests(unittest.IsolatedAsyncioTestCase):
                     "/v1/responses",
                     headers={"Authorization": "Bearer secret-token", "X-Custom": "keep"},
                     json={
-                        "model": "gpt-5.6-luna",
+                        "model": "gpt-6-luna",
                         "input": "分析网络异常根因",
                         "stream": stream,
                         "tools": [{"type": "shell"}],
@@ -174,7 +174,7 @@ class ProxyTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(captured["headers"]["authorization"], "Bearer secret-token")
         self.assertEqual(captured["payload"]["tools"], [{"type": "shell"}])
         self.assertEqual(captured["payload"]["previous_response_id"], "resp_previous")
-        self.assertEqual(captured["payload"]["model"], "gpt-5.6-sol")
+        self.assertEqual(captured["payload"]["model"], "gpt-6-sol")
         self.assertEqual(response.headers["x-codex-router-model"], "sol")
         self.assertNotIn("secret-token", log_text)
         self.assertNotIn("分析网络异常根因", log_text)
@@ -224,7 +224,7 @@ class ProxyTests(unittest.IsolatedAsyncioTestCase):
                     headers={"content-type": "application/json", "content-encoding": "zstd"},
                 )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(captured["payload"]["model"], "gpt-5.6-luna")
+        self.assertEqual(captured["payload"]["model"], "gpt-6-luna")
         self.assertNotIn("content-encoding", captured["headers"])
 
 
@@ -234,7 +234,7 @@ class ConfigTests(unittest.TestCase):
             router_config.Path, "home", return_value=Path(temp_dir)
         ):
             config = Path(temp_dir) / "config.toml"
-            original = 'model = "gpt-5.6-luna"\n\n[desktop]\npreventSleep = true\n'
+            original = 'model = "gpt-6-luna"\n\n[desktop]\npreventSleep = true\n'
             config.write_text(original, encoding="utf-8")
             self.assertTrue(router_config.enable(config).startswith("enabled backup="))
             enabled = config.read_text(encoding="utf-8")

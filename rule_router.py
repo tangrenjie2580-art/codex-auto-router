@@ -278,17 +278,17 @@ class RuleDecisionEngine:
                     scores=scores,
                 )
 
-        # Astra is intentionally rare: require a strong extreme signal plus
-        # either a second breadth signal or an explicitly extreme formulation.
+        # Initial routing always stops at Sol.  Astra requires evidence from
+        # an actual Sol analysis rather than keywords in the first request.
         astra_codes = {rule.code for rule in matched if rule.model == "astra"}
         explicit_extreme = bool(re.search(r"极复杂|高失败成本|长链路|零停机|大型|全量", text))
         if scores["astra"] >= 10 or (
             "extreme_cross_system_architecture" in astra_codes and explicit_extreme
         ):
             return RoutingDecision(
-                model="astra",
+                model="sol",
                 matched_rules=matched_codes,
-                reason="；".join(explanations) + "，达到 Astra 严格门槛。",
+                reason="；".join(explanations) + "，先由 Sol 分析，再决定是否需要 Astra。",
                 source=self.source,
                 confidence=0.92,
                 scores=scores,
@@ -342,6 +342,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("task", nargs="*", help="用户任务")
     parser.add_argument("--current-model", choices=("luna", "sol", "astra"))
+    parser.add_argument("--current-effort", choices=("low", "medium", "high", "xhigh", "max"))
     parser.add_argument("--failure-count", type=int, default=0)
     parser.add_argument("--repeated-error", action="store_true")
     parser.add_argument("--scope-expanded", action="store_true")
@@ -354,6 +355,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     request = RoutingRequest(
         task=task,
         current_model=args.current_model,
+        current_effort=args.current_effort,
         failure_count=max(args.failure_count, 0),
         repeated_error=args.repeated_error,
         scope_expanded=args.scope_expanded,

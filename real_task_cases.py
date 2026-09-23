@@ -34,9 +34,9 @@ INITIAL_CASES = (
     ("判断这个 Router 架构是否能支持多系统联动，并评估风险", "sol"),
     ("按上述方案执行，但先重新评估认证风险并排查失败原因", "sol"),
     ("按已确认方案删除生产数据库中的全部数据", "sol"),
-    ("设计大型跨系统迁移架构，要求零停机、容灾和完整回滚", "astra"),
-    ("全量重构 TTD、Mihomo、Caddy、Emby 和 Tailscale 多套系统联动架构", "astra"),
-    ("为 Codex Desktop、CLI、IDE 设计极复杂端到端 Router 长链路架构", "astra"),
+    ("设计大型跨系统迁移架构，要求零停机、容灾和完整回滚", "sol"),
+    ("全量重构 TTD、Mihomo、Caddy、Emby 和 Tailscale 多套系统联动架构", "sol"),
+    ("为 Codex Desktop、CLI、IDE 设计极复杂端到端 Router 长链路架构", "sol"),
 )
 
 
@@ -46,6 +46,6 @@ ESCALATION_CASES = (
     ("Luna 重复同一认证错误", "luna", 1, True, False, "sol"),
     ("Luna 发现任务范围扩大到多个服务", "luna", 0, False, True, "sol"),
     ("Sol 尚未达到升级条件", "sol", 1, False, False, "sol"),
-    ("Sol 多次失败仍未解决", "sol", 2, False, False, "astra"),
+    ("Sol 多次失败仍未解决", "sol", 2, False, False, "sol"),
     ("Astra 不自动降级", "astra", 0, False, False, "astra"),
 )

@@ -13,8 +13,8 @@ from typing import Any, Dict, List, Optional, Protocol
 
 
 MODEL_IDS = {
-    "luna": "gpt-5.6-luna",
-    "sol": "gpt-5.6-sol",
+    "luna": "gpt-6-luna",
+    "sol": "gpt-6-sol",
     "astra": "gpt-6-astra",
 }
 
@@ -29,6 +29,7 @@ MODEL_REASONING_EFFORTS = {
 class RoutingRequest:
     task: str
     current_model: Optional[str] = None
+    current_effort: Optional[str] = None
     failure_count: int = 0
     repeated_error: bool = False
     scope_expanded: bool = False
@@ -44,6 +45,7 @@ class RoutingDecision:
     source: str = "rules"
     confidence: float = 1.0
     scores: Dict[str, int] = field(default_factory=dict)
+    effort_override: Optional[str] = None
 
     @property
     def model_id(self) -> str:
@@ -51,7 +53,7 @@ class RoutingDecision:
 
     @property
     def reasoning_effort(self) -> str:
-        return MODEL_REASONING_EFFORTS[self.model]
+        return self.effort_override or MODEL_REASONING_EFFORTS[self.model]
 
     def to_dict(self) -> Dict[str, Any]:
         result = asdict(self)
@@ -98,17 +100,28 @@ class ModelRouter:
                 rules = ["sol_multiple_failures"]
                 if request.repeated_error:
                     rules.append("same_error_repeated")
+                if request.current_effort in {"high", "xhigh", "max"}:
+                    return RoutingDecision(
+                        model="astra",
+                        matched_rules=rules + ["sol_high_exhausted"],
+                        reason="Sol High 仍未解决或重复同一错误，升级 Astra 定向重诊断。",
+                        source="guardrail",
+                        confidence=1.0,
+                    )
+                next_effort = "medium" if request.current_effort == "low" else "high"
                 return RoutingDecision(
-                    model="astra",
-                    matched_rules=rules,
-                    reason="Sol 已多次失败或重复同一错误，升级 Astra 重新诊断。",
+                    model="sol",
+                    effort_override=next_effort,
+                    matched_rules=rules + ["raise_sol_effort"],
+                    reason="Sol 当前推理强度未形成结论，先提高到 {}。".format(next_effort),
                     source="guardrail",
                     confidence=1.0,
                 )
             return RoutingDecision(
                 model="sol",
+                effort_override=request.current_effort,
                 matched_rules=["no_automatic_downgrade"],
-                reason="任务已经进入 Sol 分析阶段，未满足 Astra 升级条件，不自动降级。",
+                reason="任务仍在 Sol 分析阶段，保持当前推理强度。",
                 source="guardrail",
                 confidence=1.0,
             )

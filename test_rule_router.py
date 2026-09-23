@@ -51,6 +51,8 @@ class RuleRouterTests(unittest.TestCase):
             )
             self.assertEqual(decision.model, expected, task)
             self.assertEqual(decision.source, "guardrail")
+            if task == "Sol 多次失败仍未解决":
+                self.assertEqual(decision.reasoning_effort, "high")
 
     def test_unclear_defaults_to_sol(self):
         decision = self.router.route(RoutingRequest(task="帮我看看"))
@@ -113,11 +115,11 @@ class RuleRouterTests(unittest.TestCase):
         extreme = self.router.route(RoutingRequest(
             task="按既定大型跨系统迁移方案开始执行零停机切换"
         ))
-        self.assertIn(extreme.model, ("sol", "astra"))
+        self.assertEqual(extreme.model, "sol")
 
     def test_model_ids_are_current_alias_mapping(self):
-        self.assertEqual(MODEL_IDS["luna"], "gpt-5.6-luna")
-        self.assertEqual(MODEL_IDS["sol"], "gpt-5.6-sol")
+        self.assertEqual(MODEL_IDS["luna"], "gpt-6-luna")
+        self.assertEqual(MODEL_IDS["sol"], "gpt-6-sol")
         self.assertEqual(MODEL_IDS["astra"], "gpt-6-astra")
         self.assertEqual(MODEL_REASONING_EFFORTS["luna"], "xhigh")
         self.assertEqual(MODEL_REASONING_EFFORTS["sol"], "medium")

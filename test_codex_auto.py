@@ -27,7 +27,7 @@ class CodexAutoTests(unittest.TestCase):
                 "codex",
                 "exec",
                 "--model",
-                "gpt-5.6-luna",
+                "gpt-6-luna",
                 "--config",
                 'model_reasoning_effort="xhigh"',
                 "更新 TTD",
@@ -38,7 +38,7 @@ class CodexAutoTests(unittest.TestCase):
         decision = codex_auto.route_task("分析网络异常根因")
         command = codex_auto.build_codex_command("codex", decision, "分析网络异常根因")
         self.assertEqual(decision.model, "sol")
-        self.assertIn("gpt-5.6-sol", command)
+        self.assertIn("gpt-6-sol", command)
         self.assertIn('model_reasoning_effort="medium"', command)
 
     def test_astra_command(self):

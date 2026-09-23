@@ -18,9 +18,9 @@ Codex Auto Router 是一个运行在本机的 OpenAI Responses API 兼容代理�
 
 - Luna：日常问答、明确且低风险的操作、固定 SOP、小范围修改、状态和日志查询。
 - Sol：根因分析、故障排查、方案规划、需求存在隐含条件、跨模块影响判断。
-- Astra：极复杂架构、高失败成本、多系统联动，以及 Sol 仍无法解决的问题。
+- Astra：Sol High 仍无法解决，或确需跨代码、应用和工具完成高难度长流程判断。
 - 判断不明确时安全默认 Sol。
-- 模型和推理强度固定映射为 Luna/xhigh、Sol/medium、Astra/low。
+- 模型映射为 GPT-6 Luna/xhigh、GPT-6 Sol/medium（按证据可升 high）、GPT-6 Astra/low。
 - Router 负责初始判断，执行模型不能自行决定升级。
 - Sol 完成方案后，新的用户消息明确要求按方案执行时，重新交给 Luna。
 - 高风险或要求重新分析的执行请求不降级。
@@ -37,7 +37,7 @@ Codex Desktop / CLI
         v
 Local Responses Router (127.0.0.1:8787)
         |
-        +-- 新用户任务 --> RuleDecisionEngine --> Luna / Sol / Astra
+        +-- 新用户任务 --> RuleDecisionEngine --> Luna / Sol
         |
         +-- 工具续接 ----> response-chain inheritance
         |
@@ -53,7 +53,7 @@ OpenAI / ChatGPT Codex upstream
 - 用户在界面中选择的初始模型可以被 Router 按任务覆盖。
 - 普通确认、使用说明和机制解释会进入 Luna。
 - 根因分析、架构评估和方案设计进入 Sol。
-- 严格的极复杂任务门槛才进入 Astra。
+- 首次路由不凭极复杂任务关键词跳过 Sol；Sol High 仍无法解决时才考虑 Astra。
 - Sol 规划完成后，用户说“按刚才已经确认的方案开始执行修改并验证结果”，新一轮会切回 Luna。
 - 同一轮中的工具续接继承原模型，避免分析过程中意外切换。
 - 路由记录只保存任务哈希、模型、规则和状态。
@@ -85,4 +85,3 @@ OpenAI / ChatGPT Codex upstream
 3. 验证子智能体显式模型请求不会被代理错误覆盖。
 4. 获得 Jev API 后先运行影子模式，对比规则判断、Jev 判断和实际任务结果。
 5. 稳定后启用“硬安全规则 + Jev 语义判断 + Sol 兜底”。
-
